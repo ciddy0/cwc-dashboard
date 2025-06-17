@@ -1,11 +1,11 @@
-import streamlit as st  # ✅ This was missing!
+import streamlit as st  
 from dotenv import load_dotenv
 import os
 import psycopg2
 import pandas as pd
 
 
-load_dotenv()  # loads variables from .env into environment
+load_dotenv() 
 
 DB_HOST = st.secrets["DB_HOST"]
 DB_PORT = st.secrets["DB_PORT"]
@@ -13,7 +13,7 @@ DB_NAME = st.secrets["DB_NAME"]
 DB_USER = st.secrets["DB_USER"]
 DB_PASS = st.secrets["DB_PASS"]
 
-@st.cache_data(ttl=3600)  # cache for 1 hour to reduce load
+@st.cache_data(ttl=3600) 
 def get_top_players(limit=10):
     query = """
         SELECT 

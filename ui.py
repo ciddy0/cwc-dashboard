@@ -134,7 +134,7 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         with cols[4]: st.metric("G/A", int(row['G/A']))
     
     # Top Goalkeepers
-    st.subheader("Top Goalkeepers by Save %)")
+    st.subheader("Top Goalkeepers by Save %")
     with st.expander("How is 'Best Goalkeeper' determined?"):
         st.write("""
         The ranking is based on:
@@ -161,10 +161,10 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
     with st.expander("How is 'Most Aggressive Team' determined?"):
         st.write("""
         The ranking is based on a weighted aggression score calculated as:
-        - Total Tackles × 1
-        - Fouls × 2
-        - Yellow Cards × 3
-        - Red Cards × 5
+        - Total Tackles: 1.0 
+        - Fouls: 2.0
+        - Yellow Cards: 3.0
+        - Red Cards: 5.0
 
         Teams with higher scores are considered more aggressive.
         """)

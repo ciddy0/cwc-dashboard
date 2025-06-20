@@ -103,8 +103,8 @@ def get_top_goalkeepers_all_matches(limit=5):
         return pd.read_sql(query, conn, params=(limit,))
 
 tab1, tab2 = st.tabs(["Match Stats", "Tournament Stats"])
-
 with tab1:
+    # --- MAIN APP ---
     st.title("Match Overview")
 
     matches_df = get_matches()
@@ -117,17 +117,21 @@ with tab1:
     selected_label = st.selectbox("Select a Match", matches_df['label'])
     selected_match = matches_df[matches_df['label'] == selected_label].iloc[0]
 
+    # --- Basic match info ---
     st.header(f"{selected_match['home_team']} {selected_match['home_score']} - {selected_match['away_score']} {selected_match['away_team']}")
     st.caption(f"{selected_match['date']}")
 
+    # --- Team stats ---
     team_stats = get_team_stats(selected_match['id'])
 
+    # --- Possession Chart ---
     fig = go.Figure(data=[
         go.Pie(labels=team_stats['team_name'], values=team_stats['possessionPct'].astype(float), hole=0.4)
     ])
     fig.update_layout(title="Possession %")
     st.plotly_chart(fig, use_container_width=True)
 
+    # --- Key stats comparison ---
     st.subheader("Key Team Stats")
     compare_stats = ['totalShots', 'shotsOnTarget', 'foulsCommitted', 'yellowCards', 'redCards', 'passPct']
     cols = st.columns(3)
@@ -135,11 +139,14 @@ with tab1:
     for i, stat in enumerate(compare_stats):
         with cols[i % 3]:
             values = team_stats[stat].astype(float)
+
+            # Format value: keep decimals only for passPct
             if stat == 'passPct':
                 display_value = f"{values.iloc[0]:.1f}% vs {values.iloc[1]:.1f}%"
             else:
                 display_value = f"{int(values.iloc[0])} vs {int(values.iloc[1])}"
 
+            # Clean and capitalize label
             label = (
                 stat.replace("Pct", " %")
                     .replace("total", "Total ")
@@ -151,13 +158,15 @@ with tab1:
             ).replace("_", " ").strip().title()
 
             st.metric(label=label, value=display_value)
-
+    # --- Top players ---
     st.subheader("Top Players by G/A (By Goals + Assists)")
     top_players = get_top_players_by_match(selected_match['id'], limit=5)
+
+
     for i in range(len(top_players)):
         row = top_players.iloc[i]
         cols = st.columns([1, 4, 2, 2, 2])
-
+        
         with cols[0]:
             st.image(row['logo'], width=50)
         with cols[1]:
@@ -169,23 +178,25 @@ with tab1:
             st.metric("Assists", row['assists'])
         with cols[4]:
             st.metric("G/A", row['G/A'])
-with tab2:
+with tab2: 
     st.header("Tournament Monsters :D")
 
-    st.subheader("Top Players by G/A (Goals + Assists)")
+    # Top Players
+    st.subheader("Top Players by G/A(Goals + Assists)")
     top_players = get_top_players_all_matches(limit=5)
     for i in range(len(top_players)):
         row = top_players.iloc[i]
         cols = st.columns([1, 4, 2, 2, 2])
         with cols[0]: st.image(row['logo'], width=50)
-        with cols[1]:
+        with cols[1]: 
             st.markdown(f"**{row['name']}**")
             st.caption(row['team_name'])
         with cols[2]: st.metric("Goals", int(row['goals']))
         with cols[3]: st.metric("Assists", int(row['assists']))
         with cols[4]: st.metric("G/A", int(row['G/A']))
-
-    st.subheader("Top Goalkeepers by Save Percentage")
+    
+    # Top Goalkeepers
+    st.subheader("Top Goalkeepers by Save %)")
     with st.expander("How is 'Best Goalkeeper' determined?"):
         st.write("""
         The ranking is based on:
@@ -194,28 +205,17 @@ with tab2:
         - If still tied, the player with more matches played ranks higher.
         - Goalkeepers with no saves are excluded.
         """)
-
     top_keepers = get_top_goalkeepers_all_matches(limit=5)
     for i in range(len(top_keepers)):
         row = top_keepers.iloc[i]
         cols = st.columns([1, 4, 2, 2, 2, 3])
-
-        with cols[0]:
-            st.image(row['logo'], width=50)
+        
+        with cols[0]: st.image(row['logo'], width=50)
         with cols[1]:
             st.markdown(f"**{row['name']}**")
             st.caption(row['team_name'])
-        with cols[2]:
-            st.metric("Saves", int(row['saves']))
-        with cols[3]:
-            st.metric("Goals Conceded", int(row['goals_conceded']))
-        with cols[4]:
-            st.metric("Matches", int(row['matches']))
-
-        # Format Save % properly with space before %
-        save_pct = row['save_pct']
-        if save_pct < 1.5:
-            save_pct *= 100
-        with cols[5]:
-            st.metric("Save Percentage", f"{save_pct:.1f} %")
+        with cols[2]: st.metric("Saves", int(row['saves']))
+        with cols[3]: st.metric("Goals Conceded", int(row['goals_conceded']))
+        with cols[4]: st.metric("Matches", int(row['matches']))
+        with cols[5]: st.metric("Save %", f"{row['save_pct'] * 100}%")
 

@@ -196,7 +196,7 @@ with tab2:
         with cols[4]: st.metric("G/A", int(row['G/A']))
     
     # Top Goalkeepers
-    st.subheader("Top Goalkeepers (by Save %)")
+    st.subheader("Top Goalkeepers by Save %)")
     with st.expander("How is 'Best Goalkeeper' determined?"):
         st.write("""
         The ranking is based on:

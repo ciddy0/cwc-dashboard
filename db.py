@@ -169,7 +169,7 @@ def get_top_goalkeepers_all_matches(limit=5):
             - goals_conceded: Total goals conceded
             - save_pct: Save percentage (rounded to 2 decimals)
     """
-    
+
     query = """
         SELECT 
             p.full_name AS name,
@@ -194,3 +194,56 @@ def get_top_goalkeepers_all_matches(limit=5):
     """
     with db_connection() as conn:
         return pd.read_sql(query, conn, params=(limit,))
+
+@st.cache_data(ttl=600)
+def get_most_aggressive_teams(limit=5):
+    """
+    Retrieves the most aggressive teams in the tournament based on a weighted aggression score
+
+    The aggression score is calculated as a weighted sum of the following statistics aggregated
+    over all matches played by each team:
+        - total_tackles (weight = 1)
+        - fouls (weight = 2)
+        - yellow_cards (weight = 3)
+        - red_cards (weight = 5)
+
+    Higher weights are assigned to fouls and cards to reflect their greater impact on aggression
+
+    Args:
+        limit (int): Number of top teams to return. Defaults to 5
+
+    Returns:
+        pandas.DataFrame: DataFrame containing the following columns:
+            - team_id (int): Unique identifier for the team
+            - team_name (str): Name of the team
+            - logo (str): URL or path to the team's logo
+            - total_tackles (int): Sum of tackles committed by the team
+            - fouls (int): Sum of fouls committed by the team
+            - yellow_cards (int): Sum of yellow cards received by the team
+            - red_cards (int): Sum of red cards received by the team
+            - aggression_score (int): Computed weighted aggression score
+    """
+    
+    query = """
+        SELECT 
+            ts.team_id,
+            t.team_name,
+            t.logo,
+            SUM(ts.total_tackles) AS total_tackles,
+            SUM(ts.fouls) AS fouls,
+            SUM(ts.yellow_cards) AS yellow_cards,
+            SUM(ts.red_cards) AS red_cards,
+            -- Weighted aggression score formula
+            (SUM(ts.total_tackles) * 1
+             + SUM(ts.fouls) * 2
+             + SUM(ts.yellow_cards) * 3
+             + SUM(ts.red_cards) * 5) AS aggression_score
+        FROM team_stats ts
+        JOIN teams t ON ts.team_id = t.team_id
+        GROUP BY ts.team_id, t.team_name, t.logo
+        ORDER BY aggression_score DESC
+        LIMIT %s;
+    """
+    with db_connection() as conn:
+        df = pd.read_sql(query, conn, params=(limit,))
+    return df

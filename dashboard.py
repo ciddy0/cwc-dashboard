@@ -28,7 +28,8 @@ from db import (
     get_team_stats,
     get_top_players_by_match,
     get_top_players_all_matches,
-    get_top_goalkeepers_all_matches
+    get_top_goalkeepers_all_matches,
+    get_most_aggressive_teams
 )
 from ui import render_match_stats_tab, render_tournament_stats_tab
 
@@ -48,7 +49,7 @@ def main():
         render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match)
 
     with tab2:
-        render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches)
+        render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams)
 
 if __name__ == "__main__":
     main()

@@ -104,7 +104,7 @@ def render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match
             st.metric("Assists", row['assists'])
         with cols[4]:
             st.metric("G/A", row['G/A'])
-def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches):
+def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams):
     """
     Render the "Tournament Stats" tab of the dashboard
 
@@ -156,3 +156,35 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         with cols[3]: st.metric("Goals Conceded", int(row['goals_conceded']))
         with cols[4]: st.metric("Matches", int(row['matches']))
         with cols[5]: st.metric("Save %", f"{row['save_pct'] * 100}%")
+
+    st.subheader("Most Aggressive Teams")
+    with st.expander("How is 'Most Aggressive Team' determined?"):
+        st.write("""
+        The ranking is based on a weighted aggression score calculated as:
+        - Total Tackles × 1
+        - Fouls × 2
+        - Yellow Cards × 3
+        - Red Cards × 5
+
+        Teams with higher scores are considered more aggressive.
+        """)
+    most_aggressive_teams = get_most_aggressive_teams(limit=5)
+
+    for i in range(len(most_aggressive_teams)):
+        row = most_aggressive_teams.iloc[i]
+        cols = st.columns([1, 4, 2, 2, 2, 2, 3])
+
+        with cols[0]:
+            st.image(row['logo'], width=50)
+        with cols[1]:
+            st.markdown(f"**{row['team_name']}**")
+        with cols[2]:
+            st.metric("Tackles", int(row['total_tackles']))
+        with cols[3]:
+            st.metric("Fouls", int(row['fouls']))
+        with cols[4]:
+            st.metric("Yellow Cards", int(row['yellow_cards']))
+        with cols[5]:
+            st.metric("Red Cards", int(row['red_cards']))
+        with cols[6]:
+            st.metric("Aggression Score", f"{row['aggression_score']:.1f}")

@@ -179,7 +179,7 @@ with tab1:
         with cols[4]:
             st.metric("G/A", row['G/A'])
 with tab2: 
-    st.header("🏆 Tournament Leaders")
+    st.header("Tournament Monsters :D")
 
     # Top Players
     st.subheader("Top Players by G/A(Goals + Assists)")

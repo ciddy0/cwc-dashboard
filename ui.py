@@ -172,7 +172,7 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
 
     for i in range(len(most_aggressive_teams)):
         row = most_aggressive_teams.iloc[i]
-        cols = st.columns([1, 4, 2, 2, 2, 2, 3])
+        cols = st.columns([1, 4, 2, 2, 3, 3, 4])
 
         with cols[0]:
             st.image(row['logo'], width=50)

@@ -229,19 +229,27 @@ def get_most_aggressive_teams(limit=5):
             ts.team_id,
             t.team_name,
             t.logo,
+            COUNT(DISTINCT ts.match_id) AS matches_played,
             SUM(ts.total_tackles) AS total_tackles,
             SUM(ts.fouls) AS fouls,
             SUM(ts.yellow_cards) AS yellow_cards,
             SUM(ts.red_cards) AS red_cards,
-            -- Weighted aggression score formula
-            (SUM(ts.total_tackles) * 1
-             + SUM(ts.fouls) * 2
-             + SUM(ts.yellow_cards) * 3
-             + SUM(ts.red_cards) * 5) AS aggression_score
+            -- Raw aggression score
+            (SUM(ts.total_tackles) * 1 +
+            SUM(ts.fouls) * 2 +
+            SUM(ts.yellow_cards) * 3 +
+            SUM(ts.red_cards) * 5) AS total_aggression_score,
+            ROUND(
+                (SUM(ts.total_tackles) * 1 +
+                SUM(ts.fouls) * 2 +
+                SUM(ts.yellow_cards) * 3 +
+                SUM(ts.red_cards) * 5)::numeric
+                / NULLIF(COUNT(DISTINCT ts.match_id), 0), 2
+            ) AS aggression_score_per_match
         FROM team_stats ts
         JOIN teams t ON ts.team_id = t.team_id
         GROUP BY ts.team_id, t.team_name, t.logo
-        ORDER BY aggression_score DESC
+        ORDER BY aggression_score_per_match DESC
         LIMIT %s;
     """
     with db_connection() as conn:

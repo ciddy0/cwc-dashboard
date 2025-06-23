@@ -23,6 +23,7 @@ Functions:
 
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
 
 def render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match):
     """

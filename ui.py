@@ -105,6 +105,7 @@ def render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match
             st.metric("Assists", row['assists'])
         with cols[4]:
             st.metric("G/A", row['G/A'])
+
 def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams, get_best_defensive_teams, get_best_attacking_teams):
     """
     Render the "Tournament Stats" tab of the dashboard
@@ -267,7 +268,7 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         with cols[6]:
             st.metric("Attack Score", f"{row['attacking_score_per_match']:.1f}")
 
-def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_matchwise_stats):
+def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_passing_efficiency):
     st.title("Team Stats & Insights")
 
     teams_df = get_all_teams()
@@ -293,15 +294,28 @@ def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_matchwise_
     cols[3].metric("Corners", stats["corners"])
 
     st.markdown("---")
-
-    st.subheader("Match Performance Trends")
-    matchwise_df = get_team_matchwise_stats(selected_team_row['team_id'])
-    fig = px.line(
-        matchwise_df,
-        x="date",
-        y=["goals", "shots_on_target", "possession_pct"],
-        markers=True,
-        title="Goals, Shots on Target, and Possession over Matches"
+    df = get_team_passing_efficiency()
+    fig = px.scatter(
+        df,
+        x='avg_possession',
+        y='avg_pass_pct',
+        size='avg_total_passes',
+        color='avg_pass_pct',
+        hover_name='team_name',
+        labels={
+            'avg_possession': 'Average Possession %',
+            'avg_pass_pct': 'Average Pass Accuracy %',
+            'avg_total_passes': 'Average Total Passes'
+        },
+        title="Team Possession vs Passing Efficiency",
+        color_continuous_scale=px.colors.sequential.Viridis,
+        size_max=40
     )
-    st.plotly_chart(fig, use_container_width=True)
 
+    fig.update_layout(
+        xaxis=dict(range=[0, 100]),
+        yaxis=dict(range=[0, 100]),
+        coloraxis_colorbar=dict(title="Pass Accuracy %")
+    )
+
+    st.plotly_chart(fig, use_container_width=True)

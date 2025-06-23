@@ -442,3 +442,26 @@ def get_team_overview_stats(team_id):
     """
     with db_connection() as conn:
         return pd.read_sql(query, conn, params=(team_id,)).iloc[0].to_dict()
+    
+@st.cache_data(ttl=600)
+def get_team_matchwise_stats(team_id):
+    query = """
+        SELECT 
+          m.date,
+          m.id AS match_id,
+          m.home_team,
+          m.away_team,
+          CASE 
+            WHEN ts.team_id = m.home_team_id THEN m.home_score
+            WHEN ts.team_id = m.away_team_id THEN m.away_score
+            ELSE 0
+          END AS goals,
+          ts.shots_on_target,
+          ts.possession_pct
+        FROM team_stats ts
+        JOIN matches m ON ts.match_id = m.id
+        WHERE ts.team_id = %s
+        ORDER BY m.date;
+    """
+    with db_connection() as conn:
+        return pd.read_sql(query, conn, params=(team_id,))

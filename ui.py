@@ -318,7 +318,7 @@ def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_possession
         fig.update_traces(marker=dict(line=dict(width=1, color='DarkSlateGrey')))
         fig.update_layout(
             xaxis=dict(range=[0, 100]),
-            yaxis=dict(range=[0, 100]),
+            yaxis=dict(range=[0, 1]),
             coloraxis_colorbar=dict(title="Pass Accuracy %")
         )
 

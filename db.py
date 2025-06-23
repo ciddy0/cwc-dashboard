@@ -401,3 +401,13 @@ def get_best_attacking_teams(limit=5):
     with db_connection() as conn:
         df = pd.read_sql(query, conn, params=(limit,))
     return df
+
+@st.cache_data(ttl=3600)
+def get_all_teams():
+    query = """
+        SELECT team_id, team_name, logo 
+        FROM teams 
+        ORDER BY team_name;
+    """
+    with db_connection() as conn:
+        return pd.read_sql(query, conn)

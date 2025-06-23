@@ -247,3 +247,77 @@ def get_most_aggressive_teams(limit=5):
     with db_connection() as conn:
         df = pd.read_sql(query, conn, params=(limit,))
     return df
+
+@st.cache_data(ttl=600)
+def get_best_defensive_teams(limit=5):
+    query = """
+        SELECT
+            ts.team_id,
+            t.team_name,
+            SUM(ts.yellow_cards) AS total_yellow_cards,
+            SUM(ts.blocked_shots) AS total_blocked_shots,
+            SUM(ts.total_tackles) AS total_tackles,
+            SUM(ts.effective_tackles) AS total_effective_tackles,
+            SUM(ts.interceptions) AS total_interceptions,
+            SUM(ts.total_clearance) AS total_clearance,
+            SUM(ts.effective_clearance) AS total_effective_clearance,
+            SUM(opp.offsides) AS offsides_against,
+
+            -- Calculate goals conceded based on match role
+            SUM(
+                CASE 
+                    WHEN ts.team_id = m.home_team_id THEN m.away_score
+                    WHEN ts.team_id = m.away_team_id THEN m.home_score
+                    ELSE 0
+                END
+            ) AS goals_conceded,
+            -- Raw defensive score
+            (
+                SUM(opp.offsides) * 2.0 +
+                SUM(ts.yellow_cards) * 1.0 +
+                SUM(ts.blocked_shots) * 1.5 +
+                SUM(ts.total_tackles) * 1.0 +
+                SUM(ts.effective_tackles) * 2.5 +
+                SUM(ts.interceptions) * 1.5 +
+                SUM(ts.total_clearance) * 1.0 +
+                SUM(ts.effective_clearance) * 2.5
+            ) AS raw_score,
+            -- Final adjusted score
+            (
+                (
+                    SUM(opp.offsides) * 2.0 +
+                    SUM(ts.yellow_cards) * 1.0 +
+                    SUM(ts.blocked_shots) * 1.5 +
+                    SUM(ts.total_tackles) * 1.0 +
+                    SUM(ts.effective_tackles) * 2.5 +
+                    SUM(ts.interceptions) * 1.5 +
+                    SUM(ts.total_clearance) * 1.0 +
+                    SUM(ts.effective_clearance) * 2.5
+                ) - 
+                SUM(
+                    CASE 
+                        WHEN ts.team_id = m.home_team_id THEN m.away_score
+                        WHEN ts.team_id = m.away_team_id THEN m.home_score
+                        ELSE 0
+                    END
+                ) * 2.0
+            ) / (1 + 
+                SUM(
+                    CASE 
+                        WHEN ts.team_id = m.home_team_id THEN m.away_score
+                        WHEN ts.team_id = m.away_team_id THEN m.home_score
+                        ELSE 0
+                    END
+                )
+            ) AS defensive_score
+    FROM team_stats ts
+    JOIN teams t ON ts.team_id = t.team_id
+    JOIN matches m ON ts.match_id = m.id
+    JOIN team_stats opp ON ts.match_id = opp.match_id AND ts.team_id != opp.team_id
+    GROUP BY ts.team_id, t.team_name
+    ORDER BY defensive_score DESC
+    LIMIT 5;
+    """
+    with db_connection() as conn:
+        df = pd.read_sql(query, conn, params=(limit,))
+    return df

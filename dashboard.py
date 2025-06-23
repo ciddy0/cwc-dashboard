@@ -29,13 +29,14 @@ from db import (
     get_top_players_by_match,
     get_top_players_all_matches,
     get_top_goalkeepers_all_matches,
-    get_most_aggressive_teams
+    get_most_aggressive_teams,
+    get_best_defensive_teams
 )
 from ui import render_match_stats_tab, render_tournament_stats_tab
 
 def main():
     """
-    Main function to laucnh the streamlit app
+    Main function to launch the streamlit app
 
     Create two tabs:
     1. Match stats: shows match specific stats and top players of that amtch
@@ -49,7 +50,7 @@ def main():
         render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match)
 
     with tab2:
-        render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams)
+        render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams, get_best_defensive_teams)
 
 if __name__ == "__main__":
     main()

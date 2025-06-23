@@ -104,7 +104,7 @@ def render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match
             st.metric("Assists", row['assists'])
         with cols[4]:
             st.metric("G/A", row['G/A'])
-def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams):
+def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams, get_best_defensive_teams):
     """
     Render the "Tournament Stats" tab of the dashboard
 
@@ -188,3 +188,47 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
             st.metric("Red Cards", int(row['red_cards']))
         with cols[6]:
             st.metric("Aggression Score", f"{row['aggression_score']:.1f}")
+    st.subheader("🛡️ Most Defensive Teams")
+    with st.expander("How is 'Most Defensive Team' determined?"):
+        st.write("""
+        The defensive score is based on weighted contributions from:
+        - Offsides against (offside traps): 2.0
+        - Yellow Cards (tactical): 1.0
+        - Effective Tackles: 2.5
+        - Total Tackles: 1.0
+        - Interceptions: 1.5
+        - Total & Effective Clearances: 1.0 & 2.5
+        - Goals conceded are subtracted and normalized per match
+
+        Teams with higher scores are more defensively effective.
+        """)
+
+    best_defensive_teams = get_best_defensive_teams(limit=5)
+
+    for i in range(len(best_defensive_teams)):
+        row = best_defensive_teams.iloc[i]
+        cols = st.columns([1, 4, 2, 2, 2, 2, 2, 3])
+
+        with cols[0]:
+            st.image(row['logo'], width=50)  # If you have logos loaded or added later
+
+        with cols[1]:
+            st.markdown(f"**{row['team_name']}**")
+
+        with cols[2]:
+            st.metric("Effective Tackles", int(row['total_effective_tackles']))
+
+        with cols[3]:
+            st.metric("Interceptions", int(row['total_interceptions']))
+
+        with cols[4]:
+            st.metric("Clearances", int(row['total_clearance']))
+        
+        with cols[5]:
+            st.metric("Offsides Against", int(row['offsides_against']))
+
+        with cols[6]:
+            st.metric("Goals Conceded", int(row['goals_conceded']))
+
+        with cols[7]:
+            st.metric("Defense Score", f"{row['defensive_score']:.1f}")

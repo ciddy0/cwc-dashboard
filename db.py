@@ -411,3 +411,34 @@ def get_all_teams():
     """
     with db_connection() as conn:
         return pd.read_sql(query, conn)
+
+@st.cache_data(ttl=600)
+def get_team_overview_stats(team_id):
+    query = """
+        SELECT
+          COUNT(*) AS matches,
+          SUM(CASE 
+              WHEN ts.team_id = m.home_team_id AND m.home_score > m.away_score THEN 1
+              WHEN ts.team_id = m.away_team_id AND m.away_score > m.home_score THEN 1
+              ELSE 0
+          END) AS wins,
+          SUM(CASE 
+              WHEN ts.team_id = m.home_team_id THEN m.home_score
+              WHEN ts.team_id = m.away_team_id THEN m.away_score
+              ELSE 0
+          END) AS goals_scored,
+          SUM(CASE 
+              WHEN ts.team_id = m.home_team_id THEN m.away_score
+              WHEN ts.team_id = m.away_team_id THEN m.home_score
+              ELSE 0
+          END) AS goals_conceded,
+          AVG(ts.possession_pct) AS avg_possession,
+          AVG(ts.pass_pct) AS avg_pass_pct,
+          AVG(ts.total_shots) AS avg_shots,
+          SUM(ts.corners) AS corners
+        FROM team_stats ts
+        JOIN matches m ON ts.match_id = m.id
+        WHERE ts.team_id = %s;
+    """
+    with db_connection() as conn:
+        return pd.read_sql(query, conn, params=(team_id,)).iloc[0].to_dict()

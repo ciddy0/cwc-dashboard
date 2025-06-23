@@ -196,7 +196,7 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         with cols[5]:
             st.metric("Red Cards", int(row['red_cards']))
         with cols[6]:
-            st.metric("Aggression Score", f"{row['aggression_score']:.1f}")
+            st.metric("Aggression Score", f"{row['aggression_score_per_match']:.1f}")
 
     st.subheader("Best Defensive Teams")
     with st.expander("How is 'Most Defensive Team' determined?"):

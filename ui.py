@@ -104,7 +104,7 @@ def render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match
             st.metric("Assists", row['assists'])
         with cols[4]:
             st.metric("G/A", row['G/A'])
-def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams, get_best_defensive_teams):
+def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams, get_best_defensive_teams, get_best_attacking_teams):
     """
     Render the "Tournament Stats" tab of the dashboard
 
@@ -234,3 +234,34 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
             st.metric("Goals Conceded", int(row['goals_conceded']))
         with cols[7]:
             st.metric("Defense Score", f"{row['defensive_score']:.1f}")
+
+    st.subheader("Best Attacking Teams")
+    with st.expander("How is 'Attacking Score' calculated?"):
+        st.write("""
+        The attacking score is a weighted average per match, based on:
+        - Goals Scored: 4.0 pts each
+        - Match Wins: 3.0 pts each
+        - Shots, Crosses, Possession %, Pass %, and Corners
+        - Accurate passes/crosses and on-target shots earn extra weight
+        """)
+
+    attacking_teams = get_best_attacking_teams(limit=5)
+
+    for i in range(len(attacking_teams)):
+        row = attacking_teams.iloc[i]
+        cols = st.columns([1, 4, 2, 2, 2, 2, 3])
+
+        with cols[0]:
+            st.image(row["logo"], width=50)
+        with cols[1]:
+            st.markdown(f"**{row['team_name']}**")
+        with cols[2]:
+            st.metric("Goals", int(row["goals_scored"]))
+        with cols[3]:
+            st.metric("Wins", int(row["match_wins"]))
+        with cols[4]:
+            st.metric("Shots", int(row["total_shots"]))
+        with cols[5]:
+            st.metric("Crosses", int(row["total_crosses"]))
+        with cols[6]:
+            st.metric("Attack Score", f"{row['attacking_score_per_match']:.1f}")

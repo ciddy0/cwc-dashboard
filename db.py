@@ -331,3 +331,73 @@ def get_best_defensive_teams(limit=5):
     with db_connection() as conn:
         df = pd.read_sql(query, conn, params=(limit,))
     return df
+
+@st.cache_data(ttl=600)
+def get_best_attacking_teams(limit=5):
+    query = """
+        SELECT
+            ts.team_id,
+            t.team_name,
+            t.logo,
+            COUNT(*) AS matches_played,
+            SUM(ts.total_shots) AS total_shots,
+            SUM(ts.shots_on_target) AS shots_on_target,
+            SUM(ts.total_crosses) AS total_crosses,
+            SUM(ts.accurate_crosses) AS accurate_crosses,
+            SUM(ts.total_long_balls) AS total_long_balls,
+            SUM(ts.accurate_long_balls) AS accurate_long_balls,
+            AVG(ts.possession_pct) AS avg_possession,
+            AVG(ts.pass_pct) AS avg_pass_pct,
+            SUM(ts.corners) AS won_corners,
+            -- Goals scored
+            SUM(
+              CASE 
+                WHEN ts.team_id = m.home_team_id THEN m.home_score
+                WHEN ts.team_id = m.away_team_id THEN m.away_score
+                ELSE 0
+              END
+            ) AS goals_scored,
+
+            -- Match wins
+            SUM(
+              CASE
+                WHEN ts.team_id = m.home_team_id AND m.home_score > m.away_score THEN 1
+                WHEN ts.team_id = m.away_team_id AND m.away_score > m.home_score THEN 1
+                ELSE 0
+              END
+            ) AS match_wins,
+            (
+              SUM(ts.total_shots) * 1.5 +
+              SUM(ts.shots_on_target) * 2.0 +
+              SUM(ts.total_crosses) * 1.0 +
+              SUM(ts.accurate_crosses) * 2.0 +
+              SUM(ts.total_long_balls) * 0.5 +
+              SUM(ts.accurate_long_balls) * 1.0 +
+              SUM(ts.corners) * 1.0 +
+              AVG(ts.possession_pct) * 0.5 +
+              AVG(ts.pass_pct) * 0.5 +
+              SUM(
+                CASE 
+                  WHEN ts.team_id = m.home_team_id THEN m.home_score
+                  WHEN ts.team_id = m.away_team_id THEN m.away_score
+                  ELSE 0
+                END
+              ) * 4.0 +
+              SUM(
+                CASE
+                  WHEN ts.team_id = m.home_team_id AND m.home_score > m.away_score THEN 1
+                  WHEN ts.team_id = m.away_team_id AND m.away_score > m.home_score THEN 1
+                  ELSE 0
+                END
+              ) * 3.0
+            ) / COUNT(*) AS attacking_score_per_match
+        FROM team_stats ts
+        JOIN teams t ON ts.team_id = t.team_id
+        JOIN matches m ON ts.match_id = m.id
+        GROUP BY ts.team_id, t.team_name, t.logo
+        ORDER BY attacking_score_per_match DESC
+        LIMIT %s;
+    """
+    with db_connection() as conn:
+        df = pd.read_sql(query, conn, params=(limit,))
+    return df

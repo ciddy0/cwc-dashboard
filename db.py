@@ -444,7 +444,7 @@ def get_team_overview_stats(team_id):
         return pd.read_sql(query, conn, params=(team_id,)).iloc[0].to_dict()
     
 @st.cache_data(ttl=600)
-def get_team_passing_efficiency():
+def get_team_possession_vs_passing(team_id):
     query = """
         SELECT
             t.team_id,
@@ -455,9 +455,9 @@ def get_team_passing_efficiency():
             AVG(ts.total_passes) AS avg_total_passes
         FROM team_stats ts
         JOIN teams t ON ts.team_id = t.team_id
-        GROUP BY t.team_id, t.team_name
-        ORDER BY avg_possession DESC;
+        WHERE t.team_id = %s
+        GROUP BY t.team_id, t.team_name;
     """
     with db_connection() as conn:
-        df = pd.read_sql(query, conn)
+        df = pd.read_sql(query, conn, params=(team_id,))
     return df

@@ -125,13 +125,17 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
     for i in range(len(top_players)):
         row = top_players.iloc[i]
         cols = st.columns([1, 4, 2, 2, 2])
-        with cols[0]: st.image(row['logo'], width=50)
+        with cols[0]: 
+            st.image(row['logo'], width=50)
         with cols[1]: 
             st.markdown(f"**{row['name']}**")
             st.caption(row['team_name'])
-        with cols[2]: st.metric("Goals", int(row['goals']))
-        with cols[3]: st.metric("Assists", int(row['assists']))
-        with cols[4]: st.metric("G/A", int(row['G/A']))
+        with cols[2]: 
+            st.metric("Goals", int(row['goals']))
+        with cols[3]: 
+            st.metric("Assists", int(row['assists']))
+        with cols[4]: 
+            st.metric("G/A", int(row['G/A']))
     
     # Top Goalkeepers
     st.subheader("Top Goalkeepers by Save %")
@@ -148,14 +152,19 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         row = top_keepers.iloc[i]
         cols = st.columns([1, 4, 2, 2, 2, 3])
         
-        with cols[0]: st.image(row['logo'], width=50)
+        with cols[0]: 
+            st.image(row['logo'], width=50)
         with cols[1]:
             st.markdown(f"**{row['name']}**")
             st.caption(row['team_name'])
-        with cols[2]: st.metric("Saves", int(row['saves']))
-        with cols[3]: st.metric("Goals Conceded", int(row['goals_conceded']))
-        with cols[4]: st.metric("Matches", int(row['matches']))
-        with cols[5]: st.metric("Save %", f"{row['save_pct'] * 100}%")
+        with cols[2]: 
+            st.metric("Saves", int(row['saves']))
+        with cols[3]: 
+            st.metric("Goals Conceded", int(row['goals_conceded']))
+        with cols[4]: 
+            st.metric("Matches", int(row['matches']))
+        with cols[5]: 
+            st.metric("Save %", f"{row['save_pct'] * 100}%")
 
     st.subheader("Most Aggressive Teams")
     with st.expander("How is 'Most Aggressive Team' determined?"):
@@ -188,7 +197,8 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
             st.metric("Red Cards", int(row['red_cards']))
         with cols[6]:
             st.metric("Aggression Score", f"{row['aggression_score']:.1f}")
-    st.subheader("🛡️ Most Defensive Teams")
+
+    st.subheader("Best Defensive Teams")
     with st.expander("How is 'Most Defensive Team' determined?"):
         st.write("""
         The defensive score is based on weighted contributions from:
@@ -199,7 +209,6 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         - Interceptions: 1.5
         - Total & Effective Clearances: 1.0 & 2.5
         - Goals conceded are subtracted and normalized per match
-
         Teams with higher scores are more defensively effective.
         """)
 
@@ -210,25 +219,18 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         cols = st.columns([1, 4, 2, 2, 2, 2, 2, 3])
 
         with cols[0]:
-            st.image(row['logo'], width=50)  # If you have logos loaded or added later
-
+            st.image(row['logo'], width=50)
         with cols[1]:
             st.markdown(f"**{row['team_name']}**")
-
         with cols[2]:
             st.metric("Effective Tackles", int(row['total_effective_tackles']))
-
         with cols[3]:
             st.metric("Interceptions", int(row['total_interceptions']))
-
         with cols[4]:
             st.metric("Clearances", int(row['total_clearance']))
-        
         with cols[5]:
             st.metric("Offsides Against", int(row['offsides_against']))
-
         with cols[6]:
             st.metric("Goals Conceded", int(row['goals_conceded']))
-
         with cols[7]:
             st.metric("Defense Score", f"{row['defensive_score']:.1f}")

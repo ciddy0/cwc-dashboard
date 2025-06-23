@@ -254,6 +254,7 @@ def get_best_defensive_teams(limit=5):
         SELECT
             ts.team_id,
             t.team_name,
+            t.logo,
             SUM(ts.yellow_cards) AS total_yellow_cards,
             SUM(ts.blocked_shots) AS total_blocked_shots,
             SUM(ts.total_tackles) AS total_tackles,
@@ -262,7 +263,6 @@ def get_best_defensive_teams(limit=5):
             SUM(ts.total_clearance) AS total_clearance,
             SUM(ts.effective_clearance) AS total_effective_clearance,
             SUM(opp.offsides) AS offsides_against,
-
             -- Calculate goals conceded based on match role
             SUM(
                 CASE 
@@ -310,13 +310,15 @@ def get_best_defensive_teams(limit=5):
                     END
                 )
             ) AS defensive_score
-    FROM team_stats ts
-    JOIN teams t ON ts.team_id = t.team_id
-    JOIN matches m ON ts.match_id = m.id
-    JOIN team_stats opp ON ts.match_id = opp.match_id AND ts.team_id != opp.team_id
-    GROUP BY ts.team_id, t.team_name
-    ORDER BY defensive_score DESC
-    LIMIT 5;
+
+        FROM team_stats ts
+        JOIN teams t ON ts.team_id = t.team_id
+        JOIN matches m ON ts.match_id = m.id
+        JOIN team_stats opp ON ts.match_id = opp.match_id AND ts.team_id != opp.team_id
+
+        GROUP BY ts.team_id, t.team_name, t.logo
+        ORDER BY defensive_score DESC
+        LIMIT %s;
     """
     with db_connection() as conn:
         df = pd.read_sql(query, conn, params=(limit,))

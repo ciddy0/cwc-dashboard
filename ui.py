@@ -265,3 +265,42 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
             st.metric("Crosses", int(row["total_crosses"]))
         with cols[6]:
             st.metric("Attack Score", f"{row['attacking_score_per_match']:.1f}")
+
+def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_matchwise_stats):
+    st.title("Team Stats & Insights")
+
+    teams_df = get_all_teams()
+    team_names = teams_df['team_name'].tolist()
+    selected_team = st.sidebar.selectbox("Select a Team", team_names)
+    selected_team_row = teams_df[teams_df['team_name'] == selected_team].iloc[0]
+
+    st.image(selected_team_row['logo'], width=80)
+    st.header(f"{selected_team}")
+
+    stats = get_team_overview_stats(selected_team_row['team_id'])
+    st.subheader("📊 General Overview")
+    cols = st.columns(4)
+    cols[0].metric("Matches", stats["matches"])
+    cols[1].metric("Wins", stats["wins"])
+    cols[2].metric("Goals Scored", stats["goals_scored"])
+    cols[3].metric("Goals Conceded", stats["goals_conceded"])
+
+    cols = st.columns(4)
+    cols[0].metric("Avg Possession %", f"{stats['avg_possession']:.1f}%")
+    cols[1].metric("Avg Pass %", f"{stats['avg_pass_pct']:.1f}%")
+    cols[2].metric("Avg Shots", f"{stats['avg_shots']:.1f}")
+    cols[3].metric("Corners", stats["corners"])
+
+    st.markdown("---")
+
+    st.subheader("Match Performance Trends")
+    matchwise_df = get_team_matchwise_stats(selected_team_row['team_id'])
+    fig = px.line(
+        matchwise_df,
+        x="date",
+        y=["goals", "shots_on_target", "possession_pct"],
+        markers=True,
+        title="Goals, Shots on Target, and Possession over Matches"
+    )
+    st.plotly_chart(fig, use_container_width=True)
+

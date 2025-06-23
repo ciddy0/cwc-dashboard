@@ -31,9 +31,12 @@ from db import (
     get_top_goalkeepers_all_matches,
     get_most_aggressive_teams,
     get_best_defensive_teams,
-    get_best_attacking_teams
+    get_best_attacking_teams,
+    get_all_teams,
+    get_team_matchwise_stats,
+    get_team_overview_stats
 )
-from ui import render_match_stats_tab, render_tournament_stats_tab
+from ui import render_match_stats_tab, render_tournament_stats_tab, render_teams_tab
 
 def main():
     """
@@ -45,7 +48,7 @@ def main():
 
     Calls rendering functions from the UI module, passing in relevant data from the DB module
     """
-    tab1, tab2 = st.tabs(["Match Stats", "Tournament Stats"])
+    tab1, tab2 = st.tabs(["Match Stats", "Tournament Stats", "Teams"])
 
     with tab1:
         render_match_stats_tab(get_matches, get_team_stats, get_top_players_by_match)
@@ -54,6 +57,8 @@ def main():
         render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers_all_matches, get_most_aggressive_teams, 
                                     get_best_defensive_teams,
                                     get_best_attacking_teams)
+    with tab2:
+        render_teams_tab(get_all_teams, get_team_overview_stats, get_team_matchwise_stats)
 
 if __name__ == "__main__":
     main()

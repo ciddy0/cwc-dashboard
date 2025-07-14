@@ -33,7 +33,7 @@ from db import (
     get_best_defensive_teams,
     get_best_attacking_teams,
     get_all_teams,
-    get_team_possession_vs_passing,
+    get_team_goals_by_match,
     get_team_overview_stats
 )
 from ui import render_match_stats_tab, render_tournament_stats_tab, render_teams_tab
@@ -58,7 +58,7 @@ def main():
                                     get_best_defensive_teams,
                                     get_best_attacking_teams)
     with tab3:
-        render_teams_tab(get_all_teams, get_team_overview_stats, get_team_possession_vs_passing)
+        render_teams_tab(get_all_teams, get_team_overview_stats, get_team_goals_by_match)
 
 if __name__ == "__main__":
     main()

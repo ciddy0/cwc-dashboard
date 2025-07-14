@@ -442,21 +442,31 @@ def get_team_overview_stats(team_id):
     """
     with db_connection() as conn:
         return pd.read_sql(query, conn, params=(team_id,)).iloc[0].to_dict()
-    
+
 @st.cache_data(ttl=600)
-def get_team_possession_vs_passing(team_id):
+def get_team_goals_by_match(team_id):
+    """
+    Retrieves goals scored by the specified team in each match, ordered chronologically.
+
+    Args:
+        team_id (int): The ID of the team.
+
+    Returns:
+        pd.DataFrame: DataFrame with columns:
+            - match_number (int): Sequential match index based on date (1 = oldest).
+            - goals_scored (int): Goals scored by the team in that match.
+    """
     query = """
         SELECT
-            t.team_id,
-            t.team_name,
-            AVG(ts.possession_pct) AS avg_possession,
-            AVG(ts.pass_pct) AS avg_pass_pct,
-            AVG(ts.accurate_passes) AS avg_accurate_passes,
-            AVG(ts.total_passes) AS avg_total_passes
+            ROW_NUMBER() OVER (ORDER BY m.date) AS match_number,
+            CASE
+                WHEN ts.team_id = m.home_team_id THEN m.home_score
+                ELSE m.away_score
+            END AS goals_scored
         FROM team_stats ts
-        JOIN teams t ON ts.team_id = t.team_id
-        WHERE t.team_id = %s
-        GROUP BY t.team_id, t.team_name;
+        JOIN matches m ON ts.match_id = m.id
+        WHERE ts.team_id = %s
+        ORDER BY m.date;
     """
     with db_connection() as conn:
         df = pd.read_sql(query, conn, params=(team_id,))

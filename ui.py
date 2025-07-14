@@ -268,7 +268,7 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
         with cols[6]:
             st.metric("Attack Score", f"{row['attacking_score_per_match']:.1f}")
 
-def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_possession_vs_passing):
+def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_goals_by_match):
     st.title("Team Stats & Insights")
 
     teams_df = get_all_teams()
@@ -294,34 +294,23 @@ def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_possession
     cols[3].metric("Corners", stats["corners"])
 
     st.markdown("---")
+    # Line chart: Goals Scored per Match
     team_id = selected_team_row["team_id"]
-    efficiency_df = get_team_possession_vs_passing(team_id)
+    goals_df = get_team_goals_by_match(team_id)
 
-    if not efficiency_df.empty:
-        fig = px.scatter(
-            efficiency_df,
-            x='avg_possession',
-            y='avg_pass_pct',
-            size='avg_total_passes',
-            color='avg_pass_pct',
-            hover_name='team_name',
+    st.subheader("📈 Goals Scored Over Matches")
+    if not goals_df.empty:
+        fig = px.line(
+            goals_df,
+            x='match_number',
+            y='goals_scored',
+            markers=True,
             labels={
-                'avg_possession': 'Average Possession %',
-                'avg_pass_pct': 'Average Pass Accuracy %',
-                'avg_total_passes': 'Average Total Passes'
+                'match_number': 'Match',
+                'goals_scored': 'Goals Scored'
             },
-            title=f"{efficiency_df.iloc[0]['team_name']} – Possession vs Passing Efficiency",
-            size_max=40,
-            color_continuous_scale=px.colors.sequential.Plasma
+            title=f"{selected_team} – Goals Scored per Match"
         )
-
-        fig.update_traces(marker=dict(line=dict(width=1, color='DarkSlateGrey')))
-        fig.update_layout(
-            xaxis=dict(range=[0, 100]),
-            yaxis=dict(range=[0, 1]),
-            coloraxis_colorbar=dict(title="Pass Accuracy %")
-        )
-
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("No passing data available for this team.")
+        st.warning("No match-level goals data available for this team.")

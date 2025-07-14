@@ -280,7 +280,7 @@ def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_goals_by_m
     st.header(f"{selected_team}")
 
     stats = get_team_overview_stats(selected_team_row['team_id'])
-    st.subheader("📊 General Overview")
+    st.subheader("General Overview")
     cols = st.columns(4)
     cols[0].metric("Matches", stats["matches"])
     cols[1].metric("Wins", stats["wins"])
@@ -298,7 +298,7 @@ def render_teams_tab(get_all_teams, get_team_overview_stats, get_team_goals_by_m
     team_id = selected_team_row["team_id"]
     goals_df = get_team_goals_by_match(team_id)
 
-    st.subheader("📈 Goals Scored Over Matches")
+    st.subheader("Goals Scored Over Matches")
     if not goals_df.empty:
         fig = px.line(
             goals_df,

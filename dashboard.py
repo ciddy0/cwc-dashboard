@@ -21,7 +21,6 @@ Dependencies:
 - db.py 
 - ui.py
 """
-
 import streamlit as st
 from db import (
     get_matches,

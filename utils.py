@@ -1,53 +1,33 @@
 """
-db.py
+utils.py
 
-Database connection utility for the Soccer Stats Dashboard
+Supabase client utility for the Soccer Stats Dashboard
 
-Provides a function to establish a connection to a Supabase database
-using credentials stored securely in Streamlit secrets and loaded environment variables.
+Provides a cached Supabase client that connects via REST API (HTTPS),
+avoiding direct PostgreSQL connection issues (pooler/IPv6).
 
 Dependencies:
 - streamlit
-- dotenv
-- psycopg2
+- supabase
 
 Functions:
-- db_connection(): Returns a psycopg2 connection object to the Supabase database.
+- get_supabase_client(): Returns a cached Supabase client instance.
 """
 
-import streamlit as st  
-from dotenv import load_dotenv
-import psycopg2
+import streamlit as st
+from supabase import create_client, Client
 
-def db_connection():
+SUPABASE_URL = "https://fkbzjxgughuqlwbvdtyk.supabase.co"
+
+@st.cache_resource
+def get_supabase_client() -> Client:
     """
-    Establishes and returns a connection to the PostgreSQL database
+    Creates and returns a cached Supabase client.
 
-    Reads database connection parameters (host, port, dbname, user, password)
-    from Streamlit secrets. Calls load_dotenv() to load any local .env variables,
-    though the primary secrets are expected from Streamlit's secrets management
+    Reads the API key from Streamlit secrets (SUPABASE_KEY).
+    Cached with st.cache_resource so the client is reused across reruns.
 
     Returns:
-        psycopg2.extensions.connection: An open connection to the database
-
-    Usage:
-        with db_connection() as conn:
-            # Use conn to perform queries
-            pass
+        supabase.Client: An authenticated Supabase client instance.
     """
-    
-    load_dotenv() 
-    DB_HOST = st.secrets["DB_HOST"]
-    DB_PORT = st.secrets["DB_PORT"]
-    DB_NAME = st.secrets["DB_NAME"]
-    DB_USER = st.secrets["DB_USER"]
-    DB_PASS = st.secrets["DB_PASS"] 
-    conn = psycopg2.connect(
-        host=DB_HOST,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        port=DB_PORT,
-        sslmode="require"
-    )
-    return conn
+    return create_client(SUPABASE_URL, st.secrets["SUPABASE_KEY"])

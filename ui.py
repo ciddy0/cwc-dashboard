@@ -140,33 +140,35 @@ def render_tournament_stats_tab(get_top_players_all_matches, get_top_goalkeepers
             st.metric("G/A", int(row['G/A']))
     
     # Top Goalkeepers
-    st.subheader("Top Goalkeepers by Save %")
+    st.subheader("Top Goalkeepers")
     with st.expander("How is 'Best Goalkeeper' determined?"):
         st.write("""
-        The ranking is based on:
-        - Save Percentage = Saves divided by total shots faced (Saves + Goals Conceded)
-        - If save percentages are tied, the player with more saves ranks higher.
-        - If still tied, the player with more matches played ranks higher.
-        - Goalkeepers with no saves are excluded.
+        The ranking uses a points-based system:
+        - **+2 points** per save
+        - **+5 points** per clean sheet (match with 0 goals conceded)
+        - **-3 points** per goal conceded
+        - Tied goalkeepers are ranked by matches played.
         """)
     top_keepers = get_top_goalkeepers_all_matches(limit=5)
     for i in range(len(top_keepers)):
         row = top_keepers.iloc[i]
-        cols = st.columns([1, 4, 2, 2, 2, 3])
-        
-        with cols[0]: 
+        cols = st.columns([1, 3, 2, 2, 2, 2, 2])
+
+        with cols[0]:
             st.image(row['logo'], width=50)
         with cols[1]:
             st.markdown(f"**{row['name']}**")
             st.caption(row['team_name'])
-        with cols[2]: 
+        with cols[2]:
             st.metric("Saves", int(row['saves']))
-        with cols[3]: 
+        with cols[3]:
             st.metric("Goals Conceded", int(row['goals_conceded']))
-        with cols[4]: 
+        with cols[4]:
             st.metric("Matches", int(row['matches']))
-        with cols[5]: 
-            st.metric("Save %", f"{row['save_pct'] * 100}%")
+        with cols[5]:
+            st.metric("Clean Sheets", int(row['clean_sheets']))
+        with cols[6]:
+            st.metric("Points", int(row['points']))
 
     st.subheader("Most Aggressive Teams")
     with st.expander("How is 'Most Aggressive Team' determined?"):

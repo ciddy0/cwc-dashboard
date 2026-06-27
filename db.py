@@ -154,8 +154,8 @@ def get_top_players_all_matches(limit=5):
 @st.cache_data(ttl=600)
 def get_top_goalkeepers_all_matches(limit=5):
     """
-    Retrieves top goalkeepers ranked by save percentage across all matches
-    Save percentage = saves / (saves + goals conceded)
+    Retrieves top goalkeepers ranked by a points-based system across all matches.
+    Points: +2 per save, +5 per clean sheet, -3 per goal conceded.
 
     Args:
         limit (int, optional): Number of goalkeepers to return. Defaults to 5
@@ -167,29 +167,35 @@ def get_top_goalkeepers_all_matches(limit=5):
             - matches: Number of distinct matches played
             - saves: Total saves made
             - goals_conceded: Total goals conceded
-            - save_pct: Save percentage (rounded to 2 decimals)
+            - clean_sheets: Number of matches with zero goals conceded
+            - points: Total points
     """
 
     query = """
-        SELECT 
+        WITH keeper_matches AS (
+            SELECT
+                ps.player_id,
+                ps.match_id,
+                (ps.stats->>'saves')::float AS saves,
+                COALESCE((ps.stats->>'goalsConceded')::float, 0) AS goals_conceded,
+                CASE WHEN COALESCE((ps.stats->>'goalsConceded')::float, 0) = 0 THEN 1 ELSE 0 END AS clean_sheet
+            FROM player_stats ps
+            WHERE ps.stats->>'saves' IS NOT NULL
+        )
+        SELECT
             p.full_name AS name,
             t.team_name,
             t.logo,
-            COUNT(DISTINCT ps.match_id) AS matches,
-            SUM((ps.stats->>'saves')::float) AS saves,
-            SUM((ps.stats->>'goalsConceded')::float) AS goals_conceded,
-            ROUND((
-                SUM((ps.stats->>'saves')::float) 
-                / NULLIF(SUM((ps.stats->>'saves')::float + (ps.stats->>'goalsConceded')::float), 0)
-            )::numeric, 2) AS save_pct
-        FROM player_stats ps
-        JOIN players p ON ps.player_id = p.player_id
+            COUNT(DISTINCT km.match_id) AS matches,
+            SUM(km.saves) AS saves,
+            SUM(km.goals_conceded) AS goals_conceded,
+            SUM(km.clean_sheet) AS clean_sheets,
+            (SUM(km.saves) * 2 + SUM(km.clean_sheet) * 5 - SUM(km.goals_conceded) * 3) AS points
+        FROM keeper_matches km
+        JOIN players p ON km.player_id = p.player_id
         JOIN teams t ON p.team_id = t.team_id
-        WHERE ps.stats->>'saves' IS NOT NULL
-          AND (ps.stats->>'saves')::float > 0
         GROUP BY p.player_id, p.full_name, t.team_name, t.logo
-        HAVING SUM((ps.stats->>'saves')::float + (ps.stats->>'goalsConceded')::float) > 0
-        ORDER BY save_pct DESC, saves DESC, matches DESC
+        ORDER BY points DESC, matches DESC
         LIMIT %s;
     """
     with db_connection() as conn:
